@@ -1,0 +1,154 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+
+typedef struct Node {
+    int position;
+    struct Node* next;
+    struct Node* prev;
+} Node;
+
+Node* createNode(int position) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->position = position;
+    newNode->next = newNode;
+    newNode->prev = newNode;
+    return newNode;
+}
+
+Node* createCircularList(int n) {
+    Node* head = createNode(0);
+    Node* current = head;
+    int i;
+    for (i = 1; i < n; i++) {
+        Node* newNode = createNode(i);
+        current->next = newNode;
+        newNode->prev = current;
+        newNode->next = head;
+        head->prev = newNode;
+        current = newNode;
+    }
+    return head;
+}
+
+Node* deleteNodeRight(Node* node) {
+    Node* prevNode = node->prev;
+    Node* nextNode = node->next;
+    prevNode->next = nextNode;
+    nextNode->prev = prevNode;
+    int position = node->position;
+    free(node);
+    return nextNode;
+}
+
+Node* deleteNodeLeft(Node* node) {
+    Node* prevNode = node->prev;
+    Node* nextNode = node->next;
+    prevNode->next = nextNode;
+    nextNode->prev = prevNode;
+    int position = node->position;
+    free(node);
+    return prevNode;
+}
+
+//Buscamos la posición que sobrevive si empezamos desde la posición 0 con saltos de k espacios.
+int safePos(int n, int k, int direction){
+	if(n==1){
+		return 0;
+	}
+	else{
+		/*Podemos saber cual es la posición que va a sobrevivir con saltos de k si empezamos desde la posición 0 con n personas
+		adaptando el valor que teniamos para n-1 personas*/
+		int pos = safePos(n-1,k,direction);
+		
+		//Izquierda
+		if(direction==0){
+			return (pos - k)%n;
+		}
+		//Derecha
+		else if(direction==1){
+			return (pos + k)%n;
+		}
+		
+	}
+}
+//Calculamos la posición en la que debamos de comenzar para que nuestro amigo sobreviva.
+/*Simplemente tomamos la posición que se salvará si empezamos desde 0 (safePosition),
+ mas el número de personas (n), se lo restamos a la posición de nuestro amigo (m) y
+  obtenemos el modulo de ese número, para que nos de una posición dentro del rango de personas*/
+int startPoint(int n, int k, int m, int direction){
+	int safePosition=safePos(n,k,direction);
+	return (m-safePosition+n)%n;
+}
+
+int executeOrder66(Node* head, int n, int k, int direction, int start) {
+
+    Node* current = head;
+  	while(start--){
+    current=current->next;
+	}
+	
+    
+    while (n > 1) {
+        // Avanzar k posiciones en la dirección especificada
+        int i;
+        for (i = 0; i <k-1; i++) {
+            if (direction == 1) {
+                current = current->next;  // Derecha
+            } else {
+                current = current->prev;  // Izquierda
+            }
+        }
+        // Mostrar el prisionero eliminado
+        printf("Eliminando prisionero en posición: %d\n", current->position);
+        if(direction==1){//Derecha
+        	current = deleteNodeRight(current);
+        	
+		}else{
+			current = deleteNodeLeft(current);
+		}
+        
+        // Eliminar el prisionero y reducir el conteo de prisioneros
+        n--;
+    }
+    printf("\n\n¡El prisionero de la posición: %d Ha sobrevivido!",current->position);
+    // La posición segura es la del último nodo en pie
+    free(current);
+}
+
+void solve(){
+	int n, k, m, direction;
+	printf("Ingresa el número de prisioneros: ");
+	scanf("%d",&n);
+	printf("Ingresa el paso: ");
+	scanf("%d",&k);
+	printf("Ingresa la posición de tu amigo: ");
+	scanf("%d",&m);
+	printf("Ingresa la dirección en la que vas a girar (0.- Izquierda/1.- Derecha): ");
+	scanf("%d",&direction);
+	
+	Node *head = createCircularList(n);
+    int goodStart = startPoint(n, k, m, direction);
+    printf("Para salvar a tu amigo de la posición %d, debes comenzar desde la posición %d\n",m,goodStart);
+    executeOrder66(head, n, k, direction, goodStart);
+	
+}
+
+int main() {
+	setlocale(LC_ALL, "");
+	int op;
+	do{
+		system("cls");
+		solve();
+		printf("\n\n\n");
+		system("pause");
+		printf("\n");
+		system("cls");
+		printf("¿Desea repetir la ejecución? (0.-Sí/1.-No): ");
+		scanf("%d",&op);
+	}while(op!=1);
+    
+	
+
+    return 0;
+}
